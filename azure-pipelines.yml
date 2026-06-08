@@ -8,6 +8,8 @@ trigger:
 
 pool:
   name: myagent
+  demands:
+  - Agent.Name -equals myslave
 
 steps:
 - script: echo Hello, world!
