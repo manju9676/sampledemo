@@ -1,9 +1,3 @@
-# Starter pipeline
-
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - master
 
@@ -11,35 +5,27 @@ pool:
   name: myagent
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'stage 2'
-
-- script: |
-    echo building stage 3
-  displayName: 'stage 3'
 
 - task: Maven@4
   inputs:
-    azureSubscription: 'Azure subscription 1(ddc45bc2-7a34-4943-8d1b-4aa187194509)'
     mavenPomFile: 'pom.xml'
+    goals: 'clean package'
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.17'
     mavenVersionOption: 'Default'
-    mavenAuthenticateFeed: false
-    effectivePomSkip: false
-    sonarQubeRunAnalysis: false
+
+- script: |
+    find $(Build.SourcesDirectory) -name "*.war"
+    ls -ltr $(Build.SourcesDirectory)/target
+  displayName: 'Verify WAR'
 
 - task: TomcatDeployment@1
   inputs:
-    TomcatUrl: 'http://20.41.218.73:8080/'
+    TomcatUrl: 'http://20.41.218.73:8080'
     Username: 'admin'
     Password: 'admin@123'
-    Warfile: '/target/*.war'
-    Context: '/'
+    Warfile: '$(Build.SourcesDirectory)/target/*.war'
+    Context: '/sample-app'
     ServerVersion: '7OrAbove'
