@@ -1,4 +1,5 @@
 # Starter pipeline
+
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
@@ -33,3 +34,11 @@ steps:
     mavenAuthenticateFeed: false
     effectivePomSkip: false
     sonarQubeRunAnalysis: false
+- task: TomcatDeployment@1
+  inputs:
+    TomcatUrl: 'http://20.41.218.73:8080/'
+    Username: 'admin'
+    Password: 'admin@123'
+    Warfile: 'target/*.jar'
+    Context: '/'
+    ServerVersion: '7OrAbove'
