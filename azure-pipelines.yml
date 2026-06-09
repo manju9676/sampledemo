@@ -40,11 +40,16 @@ steps:
     find . -name "*.war"
   displayName: 'Debug Workspace'
 
-- task: TomcatDeployment@1
+- task: Bash@3
+  displayName: Deploy to Tomcat
   inputs:
-    TomcatUrl: 'http://20.235.48.200:8080/'
-    Username: 'admin'
-    Password: 'admin123'
-    Warfile: '$(Build.SourcesDirectory)/target/*.war'
-    Context: '/'
-    ServerVersion: '7OrAbove'
+    targetType: 'inline'
+    script: |
+      WAR_FILE=$(find $(Build.SourcesDirectory)/target -name "*.war" | head -1)
+
+      echo "Deploying $WAR_FILE"
+
+      curl --fail \
+        -u admin:admin123 \
+        -T "$WAR_FILE" \
+        "http://localhost:8080/manager/text/deploy?path=/sample-app&update=true"
