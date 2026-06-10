@@ -23,9 +23,6 @@ steps:
     echo building stage 3
   displayName: 'stage 3'
 
-- task: SonarQubeAnalyze@8
-  inputs:
-    jdkversion: 'JAVA_HOME'
 
 - task: SonarQubePrepare@8
   inputs:
