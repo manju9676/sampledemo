@@ -14,8 +14,6 @@ steps:
   inputs:
     SonarQube: 'sonarqube'
     scannerMode: 'other'
-
-# Maven Build + SonarQube Analysis
 - task: Maven@4
   displayName: 'Build and Analyze'
   inputs:
