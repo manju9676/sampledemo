@@ -27,6 +27,10 @@ steps:
   inputs:
     jdkversion: 'JAVA_HOME'
 
+- task: SonarQubePrepare@8
+  inputs:
+    SonarQube: 'sonarqube'
+    scannerMode: 'other'
 - task: Maven@4
   inputs:
     azureSubscription: 'Azure subscription 1(ddc45bc2-7a34-4943-8d1b-4aa187194509)'
@@ -44,12 +48,12 @@ steps:
     find . -name "*.war"
   displayName: 'Debug Workspace'
 
-- task: TomcatDeployment@1
-  inputs:
-      TomcatUrl: 'http://20.235.48.200:8080/'
-      Username: 'admin'
-      Password: 'admin123'
-      Warfile: '$(Build.SourcesDirectory)/target/sample-app-1.0.0-SNAPSHOT.war'
-      Context: '/'
-      ServerVersion: '7OrAbove'
+# - task: TomcatDeployment@1
+#   inputs:
+#       TomcatUrl: 'http://20.235.48.200:8080/'
+#       Username: 'admin'
+#       Password: 'admin123'
+#       Warfile: '$(Build.SourcesDirectory)/target/sample-app-1.0.0-SNAPSHOT.war'
+#       Context: '/'
+#       ServerVersion: '7OrAbove'
 
