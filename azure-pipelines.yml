@@ -23,6 +23,10 @@ steps:
     echo building stage 3
   displayName: 'stage 3'
 
+- task: SonarQubeAnalyze@8
+  inputs:
+    jdkversion: 'JAVA_HOME'
+
 - task: Maven@4
   inputs:
     azureSubscription: 'Azure subscription 1(ddc45bc2-7a34-4943-8d1b-4aa187194509)'
