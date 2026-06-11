@@ -9,12 +9,11 @@ steps:
 # Checkout source code
 - checkout: self
 
-# Set JAVA_HOME
+# Verify Java
 - script: |
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     export PATH=$JAVA_HOME/bin:$PATH
 
-    echo "JAVA_HOME=$JAVA_HOME"
     java -version
     mvn -version
   displayName: 'Verify Java and Maven'
@@ -25,7 +24,7 @@ steps:
     SonarQube: 'sonarqube'
     scannerMode: 'other'
 
-# Maven Build + SonarQube Analysis
+# Build and Analyze
 - task: Maven@4
   displayName: 'Build and Analyze'
   inputs:
@@ -35,21 +34,12 @@ steps:
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     javaHomeOption: 'Path'
     jdkDirectory: '/usr/lib/jvm/java-17-openjdk-amd64'
-    mavenVersionOption: 'Default'
-    mavenAuthenticateFeed: false
-    effectivePomSkip: false
     sonarQubeRunAnalysis: true
 
-# Publish SonarQube Quality Gate
+# Publish Quality Gate
 - task: SonarQubePublish@8
   inputs:
     pollingTimeoutSec: '300'
-
-# Verify WAR file
-- script: |
-    echo "Workspace: $(Build.SourcesDirectory)"
-    find $(Build.SourcesDirectory) -name "*.war"
-  displayName: 'Locate WAR File'
 
 # Publish Artifact
 - task: PublishBuildArtifacts@1
@@ -58,50 +48,123 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
+# Docker Build
 - task: Docker@2
+  displayName: 'Build Image'
   inputs:
     containerRegistry: 'acr'
     repository: 'sampledemo'
     command: 'build'
     Dockerfile: '**/Dockerfile'
+    tags: |
+      $(Build.BuildId)
 
+# Trivy Scan
 - script: |
     trivy image --severity HIGH,CRITICAL sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
-  displayName: 'Scan Docker Image with Trivy'
+  displayName: 'Trivy Scan'
 
+# Docker Push
 - task: Docker@2
+  displayName: 'Push Image'
   inputs:
     containerRegistry: 'acr'
     repository: 'sampledemo'
     command: 'push'
+    tags: |
+      $(Build.BuildId)
 
+# Determine Target Slot
 - script: |
-    docker rm -f sampledemo-green || true
+
+    ACTIVE=$(cat /opt/sampledemo/active)
+
+    if [ "$ACTIVE" = "blue" ]; then
+      echo "Deploying to GREEN"
+      echo "green" > /tmp/newslot
+      echo "8081" > /tmp/newport
+    else
+      echo "Deploying to BLUE"
+      echo "blue" > /tmp/newslot
+      echo "8080" > /tmp/newport
+    fi
+
+  displayName: 'Determine Target Slot'
+
+# Deploy New Version
+- script: |
+
+    SLOT=$(cat /tmp/newslot)
+    PORT=$(cat /tmp/newport)
+
+    docker rm -f sampledemo-$SLOT || true
 
     docker run -d \
-      --name sampledemo-green \
-      -p 8081:8080 \
+      --name sampledemo-$SLOT \
+      -p $PORT:8080 \
       sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
-  displayName: 'Deploy Green'
 
+  displayName: 'Deploy New Version'
+
+# Health Check
 - script: |
+
+    PORT=$(cat /tmp/newport)
+
+    echo "Waiting for startup..."
     sleep 20
-    curl -f http://localhost:8081
+
+    curl -f http://localhost:$PORT
+
   displayName: 'Health Check'
 
+# Switch Nginx Traffic
 - script: |
-    sudo sed -i 's/localhost:8080/localhost:8081/' \
+
+    PORT=$(cat /tmp/newport)
+
+    sudo sed -i "s/server localhost:[0-9]*/server localhost:$PORT/" \
     /etc/nginx/conf.d/sampledemo.conf
 
     sudo nginx -t
     sudo systemctl reload nginx
+
   displayName: 'Switch Traffic'
 
+# Update Active Slot
 - script: |
-    docker stop sampledemo
-    docker rm sampledemo
-  displayName: 'Remove Old Container'
 
+    SLOT=$(cat /tmp/newslot)
+
+    echo $SLOT | sudo tee /opt/sampledemo/active
+
+  displayName: 'Mark Active Slot'
+
+# Remove Old Slot
 - script: |
-    docker rename sampledemo-green sampledemo
-  displayName: 'Promote Green'
+
+    ACTIVE=$(cat /opt/sampledemo/active)
+
+    if [ "$ACTIVE" = "blue" ]; then
+      docker rm -f sampledemo-green || true
+    else
+      docker rm -f sampledemo-blue || true
+    fi
+
+  displayName: 'Cleanup Old Slot'
+
+# Verification
+- script: |
+
+    echo "===== ACTIVE SLOT ====="
+    cat /opt/sampledemo/active
+
+    echo "===== RUNNING CONTAINERS ====="
+    docker ps
+
+    echo "===== NGINX ====="
+    cat /etc/nginx/conf.d/sampledemo.conf
+
+    curl -I http://localhost
+
+  displayName: 'Verify Deployment'
