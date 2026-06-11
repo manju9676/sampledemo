@@ -74,9 +74,6 @@ steps:
     containerRegistry: 'acr'
     repository: 'sampledemo'
     command: 'push'
-- script: |
-    docker pull sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
-  displayName: 'Pull Image'
 
 - script: |
     docker rm -f sampledemo-green || true
