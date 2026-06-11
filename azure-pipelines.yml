@@ -75,5 +75,36 @@ steps:
     repository: 'sampledemo'
     command: 'push'
 - script: |
-    docker run -d -p 8080:8080 --name sampledemo sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
-  displayName: 'Run Docker Container'
+    docker pull sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
+  displayName: 'Pull Image'
+
+- script: |
+    docker rm -f sampledemo-green || true
+
+    docker run -d \
+      --name sampledemo-green \
+      -p 8081:8080 \
+      sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
+  displayName: 'Deploy Green'
+
+- script: |
+    sleep 20
+    curl -f http://localhost:8081
+  displayName: 'Health Check'
+
+- script: |
+    sudo sed -i 's/localhost:8080/localhost:8081/' \
+    /etc/nginx/conf.d/sampledemo.conf
+
+    sudo nginx -t
+    sudo systemctl reload nginx
+  displayName: 'Switch Traffic'
+
+- script: |
+    docker stop sampledemo
+    docker rm sampledemo
+  displayName: 'Remove Old Container'
+
+- script: |
+    docker rename sampledemo-green sampledemo
+  displayName: 'Promote Green'
