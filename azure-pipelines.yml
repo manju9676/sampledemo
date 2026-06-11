@@ -58,6 +58,13 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
+- task: Docker@2
+  inputs:
+    containerRegistry: 'acr'
+    repository: 'sampledemo'
+    command: 'build'
+    Dockerfile: '**/Dockerfile'
+
 # Deploy to Tomcat (Uncomment when ready)
 # - task: TomcatDeployment@1
 #   displayName: 'Deploy to Tomcat'
