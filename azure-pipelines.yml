@@ -69,7 +69,11 @@ steps:
     trivy image --severity HIGH,CRITICAL sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
   displayName: 'Scan Docker Image with Trivy'
 
-
+- task: Docker@2
+  inputs:
+    containerRegistry: 'acr'
+    command: 'start'
+    container: 'sampleapp'
 
 # Deploy to Tomcat (Uncomment when ready)
 # - task: TomcatDeployment@1
