@@ -72,8 +72,9 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: 'acr'
-    command: 'start'
-    container: 'sampleapp'
+    repository: 'sampledemo'
+    command: 'push'
+
 
 # Deploy to Tomcat (Uncomment when ready)
 # - task: TomcatDeployment@1
