@@ -58,11 +58,13 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-- task: Docker@2
-  displayName: 'Build and Push Docker Image'
-  inputs:
-    command: 'buildAndPush'
-    repository: 'mydockerhubusername/myapp'
-    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-    containerRegistry: 'mydockerhubconnection'
-    tags: 'latest'
+# Deploy to Tomcat (Uncomment when ready)
+# - task: TomcatDeployment@1
+#   displayName: 'Deploy to Tomcat'
+#   inputs:
+#     TomcatUrl: 'http://20.235.48.200:8080'
+#     Username: 'admin'
+#     Password: 'admin123'
+#     Warfile: '$(Build.SourcesDirectory)/target/*.war'
+#     Context: '/'
+#     ServerVersion: '7OrAbove'
