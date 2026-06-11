@@ -58,13 +58,10 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# Deploy to Tomcat (Uncomment when ready)
-# - task: TomcatDeployment@1
-#   displayName: 'Deploy to Tomcat'
-#   inputs:
-#     TomcatUrl: 'http://20.235.48.200:8080'
-#     Username: 'admin'
-#     Password: 'admin123'
-#     Warfile: '$(Build.SourcesDirectory)/target/*.war'
-#     Context: '/'
-#     ServerVersion: '7OrAbove'
+- task: Docker@2
+  inputs:
+    containerRegistry: 'acr'
+    repository: 'sampledemo'
+    command: 'build'
+    Dockerfile: '**/Dockerfile'
+
