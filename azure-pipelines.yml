@@ -74,7 +74,11 @@ steps:
     containerRegistry: 'acr'
     repository: 'sampledemo'
     command: 'push'
+- script: |
+    docker run -d -p 8080:8080 --name sampledemo sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
+  displayName: 'Run Docker Container'
 
+  
 
 # Deploy to Tomcat (Uncomment when ready)
 # - task: TomcatDeployment@1
