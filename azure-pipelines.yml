@@ -65,6 +65,12 @@ steps:
     command: 'build'
     Dockerfile: '**/Dockerfile'
 
+- script: |
+    trivy image --severity HIGH,CRITICAL sampledemo:latest
+  displayName: 'Scan Docker Image with Trivy'
+
+
+
 # Deploy to Tomcat (Uncomment when ready)
 # - task: TomcatDeployment@1
 #   displayName: 'Deploy to Tomcat'
