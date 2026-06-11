@@ -66,7 +66,7 @@ steps:
     Dockerfile: '**/Dockerfile'
 
 - script: |
-    trivy image --severity HIGH,CRITICAL sampledemo:latest
+    trivy image --severity HIGH,CRITICAL sampledemo.azurecr.io/sampledemo:$(Build.BuildId)
   displayName: 'Scan Docker Image with Trivy'
 
 
